@@ -1,4 +1,4 @@
-#include "VkApi.h"
+#include "../include/VkApi.h"
 
 VkApi::VkApi()
     : session("api.vk.com", 443, new Poco::Net::Context(Poco::Net::Context::CLIENT_USE, "", "",
