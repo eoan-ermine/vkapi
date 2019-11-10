@@ -1,3 +1,4 @@
+ 
 #include "../include/VkApi.h"
 
 VkApi::VkApi(const std::string token, const std::string version_)
@@ -27,5 +28,5 @@ const std::string& VkApi::getVersion() const {
 }
 
 const std::string& VkApi::getToken() const {
-    return token;
+    return access_token;
 }
