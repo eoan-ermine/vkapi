@@ -10,3 +10,5 @@ libVkApi.so.1.0.1
 *.cmake
 
 CMakeCache.txt
+
+*.txt
