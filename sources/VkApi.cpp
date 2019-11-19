@@ -9,7 +9,7 @@ VkApi::VkApi(const std::string token, const std::string version_)
     request.setMethod(Poco::Net::HTTPRequest::HTTP_GET);
 }
 
-rapidjson::Document VkApi::executeMethod(
+nlohmann::json VkApi::executeMethod(
     const std::string& method, const Poco::URI::QueryParameters& params) {
     uri = "https://api.vk.com/method/" + method;
     if(params.size()) {
@@ -20,13 +20,16 @@ rapidjson::Document VkApi::executeMethod(
     request.setURI(uri.toString());
     
     session.sendRequest(request);
-    rapidjson::IStreamWrapper isw(session.receiveResponse(response));
-    rapidjson::Document returnDocument;
-    returnDocument.ParseStream(isw);
+
+    nlohmann::json result;
+    session.receiveResponse(response) >> result;
     
-    return returnDocument;
+    return result;
 }
 
+    // I will implememt work with VK LongPoll later
+
+/*
 void VkApi::initializeLongPoll(const std::string& server_, const std::string& key_, const std::string& wait_, const std::string& mode_, const std::string& version_) {
     longUrl += server_;
     longUrl += "?act=a_check&key=";
@@ -46,7 +49,7 @@ rapidjson::Document VkApi::getLongPoll(const std::string& ts) {
     rapidjson::Document returnDocument;
     returnDocument.ParseStream(isw);
     return returnDocument;
-}
+}*/
 
 const std::string& VkApi::getVersion() const {
     return version;
