@@ -1,16 +1,40 @@
 #include "../include/VkApi.h"
 #include <iostream>
 
-VkApi::VkApi(const std::string token, const std::string version_)
-    : session("api.vk.com", 443, new Poco::Net::Context(Poco::Net::Context::CLIENT_USE, "", "",
+VkApi::VkApi(): VkApi("", "", "", DEFAULT_VERSION) { }
+
+VkApi::VkApi(std::string token) : VkApi("", "", std::move(token), DEFAULT_VERSION) { }
+
+VkApi::VkApi(std::string login, std::string password) : VkApi(std::move(login), std::move(password), "", DEFAULT_VERSION) { }
+
+VkApi::VkApi(std::string login, std::string password, std::string token, std::string version)
+    : session("vk.com", 443, new Poco::Net::Context(Poco::Net::Context::CLIENT_USE, "", "",
                                         "", Poco::Net::Context::VERIFY_NONE, 9,
                                         false,
-                                        "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH")), request(Poco::Net::HTTPMessage::HTTP_1_1), access_token(std::move(token)), version(std::move(version_)), longUrl("https://") {
+                                        "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH")), request(Poco::Net::HTTPMessage::HTTP_1_1), login(std::move(login)), password(std::move(password)), access_token(std::move(token)), version(std::move(version)) {
     request.setMethod(Poco::Net::HTTPRequest::HTTP_GET);
 }
 
-nlohmann::json VkApi::executeMethod(
-    const std::string& method, const Poco::URI::QueryParameters& params) {
+bool VkApi::auth() {
+    if(!login.empty() && !password.empty() && access_token.empty()) {
+        uri = "https://oauth.vk.com/token";
+        uri.setQueryParameters({{"grant_type", "password"}, {"client_id", CLIENT_ID}, {"client_secret", CLIENT_SECRET}, {"username", login}, {"password", password}});
+        request.setURI(uri.toString());
+        
+        session.sendRequest(request);
+        
+        nlohmann::json result;
+        session.receiveResponse(response) >> result;
+        
+        if(result.count("access_token")) {
+            this->access_token = result["access_token"].get<std::string>();
+            return true;
+        }
+    }
+    return false;   
+}
+
+nlohmann::json VkApi::executeMethod(const std::string& method, const Poco::URI::QueryParameters& params) {
     uri = "https://api.vk.com/method/" + method;
     if(params.size()) {
         uri.setQueryParameters(params);
@@ -25,36 +49,4 @@ nlohmann::json VkApi::executeMethod(
     session.receiveResponse(response) >> result;
     
     return result;
-}
-
-    // I will implememt work with VK LongPoll later
-
-/*
-void VkApi::initializeLongPoll(const std::string& server_, const std::string& key_, const std::string& wait_, const std::string& mode_, const std::string& version_) {
-    longUrl += server_;
-    longUrl += "?act=a_check&key=";
-    longUrl += key_;
-    longUrl += "&wait=";
-    longUrl += wait_;
-    longUrl += "&mode=";
-    longUrl += mode_;
-    longUrl += "&version=";
-    longUrl += version_;
-}
-
-rapidjson::Document VkApi::getLongPoll(const std::string& ts) {
-    request.setURI(longUrl + "&ts=" + ts);
-    session.sendRequest(request);
-    rapidjson::IStreamWrapper isw(session.receiveResponse(response));
-    rapidjson::Document returnDocument;
-    returnDocument.ParseStream(isw);
-    return returnDocument;
-}*/
-
-const std::string& VkApi::getVersion() const {
-    return version;
-}
-
-const std::string& VkApi::getToken() const {
-    return access_token;
 }

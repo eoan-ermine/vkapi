@@ -7,7 +7,11 @@
 #include "Poco/Net/HTTPSClientSession.h"
 #include "Poco/URI.h"
 
-#include <string_view>
+#include <string>
+
+const std::string CLIENT_ID = "3697615";
+const std::string CLIENT_SECRET = "AlVXZFMUqyrnABp8ncuU";
+const std::string DEFAULT_VERSION = "5.101";
 
 class VkApi {
 private:
@@ -16,19 +20,33 @@ private:
     Poco::Net::HTTPResponse response;
     Poco::URI uri;
     
-    const std::string access_token;
-    const std::string version;
-    
-    std::string longUrl;
+    std::string login;
+    std::string password;
+    std::string access_token;
+    std::string version;
 public:
-    VkApi(std::string token, std::string version_);
-    nlohmann::json executeMethod(const std::string&,
-                                          const Poco::URI::QueryParameters& params={});
-    const std::string& getVersion() const;
-    const std::string& getToken() const;
+    VkApi();
+    VkApi(std::string token);
+    VkApi(std::string login, std::string password);
+    VkApi(std::string login, std::string password, std::string token, std::string version);
+    bool auth();
+    nlohmann::json executeMethod(const std::string&, const Poco::URI::QueryParameters& params={});
     
-    //  I will implement work with VK LongPoll later
+    const std::string& getVersion() const {
+        return version;
+    }
     
-    //void initializeLongPoll(const std::string& server_, const std::string& key_, const std::string& wait_, const std::string& mode_, const std::string& version_);
-    //nlohmann::json getLongPoll(const std::string& ts);
+    const std::string& getToken() const {
+        return access_token;
+    }
+    
+    template <class T>
+    void setToken(T&& token) {
+        access_token = std::forward<T>(token);
+    }
+    
+    template <class T>
+    void setVersion(T& version) {
+        this->version = std::forward<T>(version);
+    }
 };
