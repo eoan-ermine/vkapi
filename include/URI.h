@@ -9,17 +9,14 @@ public:
         uri = url;
     }
     
-    void setMethod(const std::string method) {
+    void setMethod(const std::string& method) {
         uri.append(method);
         uri.push_back('?');
     }
     
     void setQueryParameters(const std::initializer_list<std::pair<std::string, std::string>>& params) {
         for(const std::pair<std::string, std::string>& element: params) {
-            uri.append(element.first);
-            uri.push_back('=');
-            uri.append(element.second);
-            uri.push_back('&');
+            addQueryParameter(element.first, element.second);
         }
     }
     
