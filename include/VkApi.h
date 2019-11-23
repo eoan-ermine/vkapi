@@ -22,19 +22,15 @@ private:
 public:
     VkApi() : VkApi("", "", "", DEFAULT_VERSION) { }
     
-    template <class T1>
-    VkApi(T1&& token) : VkApi("", "", std::forward<T1>(token), DEFAULT_VERSION) { }
+    VkApi(const std::string& token) : VkApi("", "", token, DEFAULT_VERSION) { }
     
-    template <class T1, class T2>
-    VkApi(T1&& login, T2&& password) : VkApi(std::forward<T1>(login), std::forward<T2>(password), "", DEFAULT_VERSION) { }
+    VkApi(const std::string& login, const std::string& password) : VkApi(login, password, "", DEFAULT_VERSION) { }
     
-    template<class T1, class T2, class T3, class T4>
-    VkApi(T1&& login, T2&& password, T3&& token, T4&& version) : session("vk.com", 443, new Poco::Net::Context(Poco::Net::Context::CLIENT_USE, "", "", "", Poco::Net::Context::VERIFY_NONE, 9, false, "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH")), request(Poco::Net::HTTPMessage::HTTP_1_1), login(std::forward<T1>(login)), password(std::forward<T2>(password)), access_token(std::forward<T3>(token)), version(std::forward<T4>(version)) {
+    VkApi(const std::string& login, const std::string& password, const std::string& token, const std::string& version) : session("vk.com", 443, new Poco::Net::Context(Poco::Net::Context::CLIENT_USE, "", "", "", Poco::Net::Context::VERIFY_NONE, 9, false, "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH")), request(Poco::Net::HTTPMessage::HTTP_1_1), login(login), password(password), access_token(token), version(version) {
         request.setMethod(Poco::Net::HTTPRequest::HTTP_GET);
     }
 
-    nlohmann::json executeMethod(const std::string& method, const std::initializer_list<std::pair<std::string, std::string>>& params={}) {
-        
+    nlohmann::json executeMethod(const std::string& method, const std::initializer_list<std::pair<std::string, std::string>>& params={}) {      
         uri.setURI("https://api.vk.com/method/");
         uri.setMethod(method);
         
@@ -73,10 +69,9 @@ public:
         return false;
     }
     
-    template <class T1, class T2>
-    bool reAuth(T1&& login, T2&& password) {
-        this->login = std::forward<T1>(login);
-        this->password = std::forward<T2>(password);
+    bool reAuth(const std::string login, const std::string password) {
+        this->login = std::move(login);
+        this->password = std::move(password);
         
         return auth();   
     }
@@ -89,13 +84,11 @@ public:
         return access_token;
     }
     
-    template <class T>
-    void setToken(T&& token) {
-        access_token = std::forward<T>(token);
+    void setToken(const std::string token) {
+        access_token = std::move(token);
     }
     
-    template <class T>
-    void setVersion(T&& version) {
-        this->version = std::forward<T>(version);
+    void setVersion(const std::string version) {
+        this->version = std::move(version);
     }
 };
