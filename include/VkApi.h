@@ -5,9 +5,7 @@
 #include "Poco/Net/HTTPRequest.h"
 #include "Poco/Net/HTTPResponse.h"
 #include "Poco/Net/HTTPSClientSession.h"
-#include "Poco/URI.h"
-
-#include <string>
+#include "URI.h"
 
 const std::string CLIENT_ID = "3697615";
 const std::string CLIENT_SECRET = "AlVXZFMUqyrnABp8ncuU";
@@ -18,12 +16,9 @@ private:
     Poco::Net::HTTPSClientSession session;
     Poco::Net::HTTPRequest request;
     Poco::Net::HTTPResponse response;
-    Poco::URI uri;
-    
-    std::string login;
-    std::string password;
-    std::string access_token;
-    std::string version;
+    URI uri;
+   
+    std::string login, password, access_token, version;
 public:
     VkApi() : VkApi("", "", "", DEFAULT_VERSION) { }
     
@@ -38,8 +33,11 @@ public:
         request.setMethod(Poco::Net::HTTPRequest::HTTP_GET);
     }
 
-    nlohmann::json executeMethod(const std::string& method, const Poco::URI::QueryParameters& params={}) {
-        uri = "https://api.vk.com/method/" + method;
+    nlohmann::json executeMethod(const std::string& method, const std::initializer_list<std::pair<std::string, std::string>>& params={}) {
+        
+        uri.setURI("https://api.vk.com/method/");
+        uri.setMethod(method);
+        
         if(params.size()) {
             uri.setQueryParameters(params);
         }
@@ -55,23 +53,23 @@ public:
         return result;
     }
                            
-                                          
     bool auth() {
-        if(!login.empty() && !password.empty() && access_token.empty()) {
-            uri = "https://oauth.vk.com/token";
-            uri.setQueryParameters({{"grant_type", "password"}, {"client_id", CLIENT_ID}, {"client_secret", CLIENT_SECRET}, {"username", login}, {"password", password}});
-            request.setURI(uri.toString());
+        uri.setURI("https://oauth.vk.com/");
+        uri.setMethod("token");
+        
+        uri.setQueryParameters({{"grant_type", "password"}, {"client_id", CLIENT_ID}, {"client_secret", CLIENT_SECRET}, {"username", login}, {"password", password}});
+        request.setURI(uri.toString());
             
-            session.sendRequest(request);
+        session.sendRequest(request);
             
-            nlohmann::json result;
-            session.receiveResponse(response) >> result;
+        nlohmann::json result;
+        session.receiveResponse(response) >> result;
             
-            if(result.count("access_token")) {
-                this->access_token = result["access_token"].get<std::string>();
-                return true;
-            }
+        if(result.count("access_token")) {
+            this->access_token = result["access_token"].get<std::string>();
+            return true;
         }
+        
         return false;
     }
 
