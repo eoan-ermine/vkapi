@@ -72,6 +72,14 @@ public:
         
         return false;
     }
+    
+    template <class T1, class T2>
+    bool reAuth(T1&& login, T2&& password) {
+        this->login = std::forward<T1>(login);
+        this->password = std::forward<T2>(password);
+        
+        return auth();   
+    }
 
     const std::string& getVersion() const {
         return version;
